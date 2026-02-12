@@ -1,8 +1,6 @@
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 function buildPrompt(productName, description, targetAudience, goal, tone, count) {
   const goalContext = {
@@ -86,13 +84,10 @@ module.exports = async (req, res) => {
   const prompt = buildPrompt(productName, description, targetAudience, goal, tone, Math.min(count, 5));
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }]
-    });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-    const text = message.content[0].text;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
     // Extract JSON from response (handle potential markdown wrapping)
     let jsonStr = text;
